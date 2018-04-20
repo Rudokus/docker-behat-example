@@ -1,0 +1,66 @@
+version: '2'
+
+services:
+
+  behat:
+    container_name: behat
+    build: ./behat/
+    volumes_from:
+      - php
+    depends_on:
+      - php
+      - hub
+    links:
+      - hub
+      - firefox:firefox.behat
+      - chrome:chrome.behat
+      - mysql
+      - httpd
+      - httpd:drupal.localdomain
+    working_dir: /data/drupal
+    environment:
+        website: http://drupal.localdomain
+
+  hub:
+    container_name: selenium-hub
+    image: selenium/hub:3.4.0
+    expose:
+      - 4444
+    ports:
+      - 4444:4444
+
+  firefox:
+    container_name: firefox_linux
+    image: selenium/node-firefox-debug:3.4.0
+    depends_on:
+      - hub
+      - httpd
+    links:
+      - hub
+      - httpd:drupal.localdomain
+    expose:
+      - 5555
+    ports:
+      - 5555:5555
+      - 5900:5900
+    environment:
+      - HUB_PORT_4444_TCP_ADDR=hub
+      - HUB_PORT_4444_TCP_PORT=4444
+
+  chrome:
+    container_name: chrome_linux
+    image: selenium/node-chrome-debug:3.4.0
+    depends_on:
+      - hub
+      - httpd
+    links:
+      - hub
+      - httpd:drupal.localdomain
+    expose:
+      - 5555
+    ports:
+      - 5556:5555
+      - 5901:5900
+    environment:
+      - HUB_PORT_4444_TCP_ADDR=hub
+      - HUB_PORT_4444_TCP_PORT=4444
